@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>HPD Housing Litigations</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+
+<style>
+	body { margin: 0; padding: 0; }
+	#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+	.map-overlay {
+	font-family: 'Montserrat', sans-serif;
+	/*font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;*/
+	position: absolute;
+	width: 40%;
+	top: 0;
+	left: 0;
+	padding: 10px;
+	}
+	 
+	.map-overlay .map-overlay-inner {
+	background-color: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+	padding: 10px;
+	margin-bottom: 10px;
+	}
+	 
+	.map-overlay h2 {
+	line-height: 24px;
+	display: block;
+	margin: 0 0 10px;
+	}
+	.mapboxgl-popup {
+	max-width: 400px;
+	font: 12px/20px 'Montserrat Neue',sans-serif;
+	}
+	#slider{
+		width:90%;
+	}
+</style>
+</head>
+<body>
+<div id="map"></div>
+	<div class="map-overlay top">
+	<div class="map-overlay-inner">
+	<h2>New York HPD Housing Litigations</h2>
+	<p>Department of Housing Preservation and Development's court litigations against privately owned buildings by year. Data from <a href='https://data.cityofnewyork.us/Housing-Development/Housing-Litigations/59kj-x8nc'>NYC Open Data</a>. Different colors represent different case statuses.<br> <br><a href="https://data.cityofnewyork.us/api/views/59kj-x8nc/files/f1fa59a6-f45d-4109-bbf0-811aacc3fa1a?download=true&filename=Housing_Litigations_Data_Dictionary.pdf">Data Dictionary</a> </p>
+	<!-- <h4></h4> -->
+	<label id="yearlabels">2020</label>
+	<br>
+	<input id="slider" type="range" min="2000" max="2020" step="1" value="2020" />
+	</div>
+	
+	</div>
+</div>
+
+<script>
+	// TO MAKE THE MAP APPEAR YOU MUST
+	// ADD YOUR ACCESS TOKEN FROM
+	// https://account.mapbox.com
+	mapboxgl.accessToken = 'pk.eyJ1IjoiaWFtd2Z4IiwiYSI6ImNqNGFnMnIyMzEwZzgycXJ1ODdqbG14eGMifQ.3AqBqXZlcbsbEhxddAPB-g';
+var map = new mapboxgl.Map({
+	container: 'map',
+	style: 'mapbox://styles/iamwfx/ckgzk38o81f3e19rugv2k9lk4',
+	zoom: 12,
+	center: [-73.935242, 40.730610]
+	});
+var YearCaseOpen = [2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+       2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
+       2019, 2020];
+
+function filterBy(year) {
+	var filters = ['==', 'YearCaseOpen', year];
+	map.setFilter('litigations_points', filters);
+	
+	// Set the label to the year
+	document.getElementById('yearlabels').textContent = year;
+}
+
+map.on('load', function () {
+
+	map.addSource('litigations', {
+	type: 'vector',
+	url: 'mapbox://iamwfx.c1ke1r2k'
+	});
+
+	map.addLayer({
+	'id': 'litigations_points',
+	'type': 'circle',
+	'source': 'litigations',
+	'source-layer': 'Housing_Litigations_NEW-9eek3h',
+	'paint': {
+	// make circles larger as the user zooms from z12 to z22
+	'circle-radius': {
+	'base': 1.75,
+	'stops': [
+	[1, 3],
+	[30, 200]
+	]
+	},
+	// https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-match
+	'circle-color': [
+	'match',
+	['get', 'CaseStatusNew'],
+	'CLOSED',"#c5c2c5", 
+	'GRANTED',"#d426ae",
+	'PENDING',"#7c58fc",
+	'Exempt', "#521b80",
+	'WithDrawn/Abandoned',"#f73b07",
+	'DENIED',"#f06018",
+	'APPLICATION PENDING',"#fa9e96",
+	'Rescinded',"#34edcb",
+	'Rejected',"#f7f086",
+	'Settlement With Cure',"#0fa602",
+	       /* other */ '#ccc'
+	]
+	}
+	});
+	filterBy(2020);
+	 
+	document
+	.getElementById('slider')
+	.addEventListener('input', function (e) {
+		
+		var year = parseInt(e.target.value, 10);
+		filterBy(year);
+	});
+
+	// Create a popup, but don't add it to the map yet.
+	var popup = new mapboxgl.Popup({
+	closeButton: false,
+	closeOnClick: false
+	});
+
+	map.on('mouseenter', 'litigations_points', function (e) {
+	// Change the cursor style as a UI indicator.
+	map.getCanvas().style.cursor = 'pointer';
+	 
+	var coordinates = e.features[0].geometry.coordinates.slice();
+
+	var caseType = e.features[0].properties.CaseType;
+	var caseOpenDate = e.features[0].properties.CaseOpenDate;
+	var findingOfHarrassment = e.features[0].properties.FindingOfHarassment;
+	var houseNumber = e.features[0].properties.HouseNumber;
+	var streetName = e.features[0].properties.StreetName;
+	var NTA = e.features[0].properties.NTA;
+	var caseStatus = e.features[0].properties.CaseStatus;
+	var respondent = e.features[0].properties.Respondent;
+	description = '<h4>' + houseNumber+' '+streetName +'<h4>' + 
+					'<strong>' + "Case Status: "+'</strong>'+caseStatus + '<br>' + 
+				  '<strong>' + "Case Type: "+'</strong>'+caseType + '<br>' + 
+				  '<strong>' + "Case Open Date: "+'</strong>'+caseOpenDate + '<br>' + 
+				  '<strong>' + "Finding of Harrassment:  "+'</strong>'+findingOfHarrassment + '<br>'+
+				  '<strong>' + "Respondent:  "+'</strong>'+respondent + '<br>' 
+	// Ensure that if the map is zoomed out such that multiple
+	// copies of the feature are visible, the popup appears
+	// over the copy being pointed to.
+	while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+	coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+	}
+	 
+	// Populate the popup and set its coordinates
+	// based on the feature found.
+	popup.setLngLat(coordinates).setHTML(description).addTo(map);
+	});
+	 
+	map.on('mouseleave', 'litigations_points', function () {
+	map.getCanvas().style.cursor = '';
+	popup.remove();
+	});
+
+});
+</script>
+ 
+</body>
+</html>
