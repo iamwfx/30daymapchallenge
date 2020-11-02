@@ -274,68 +274,6 @@ map.on('load', function () {
 
 
 
-	// function updateTraffic(){
-		// $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function( data ) {
-		//   // var items = {
-		// 		// 	  "type": "FeatureCollection",
-		// 		// 	  "features":[]};
-		//   	$.each( data, function( i,v ) {
-		// 	  	// console.log(v["encoded_poly_line"]);
-		// 	  	pts = polyline.decode(v["encoded_poly_line"]);
-		// 	  	json_this = {"type":"Feature",
-		//     			"properties":{"id":v["id"],
-		//     						  "speed":parseInt(v["speed"]),
-		//     						  "travel_time":parseInt(v["travel_time"]),
-		//     						  "data_as_of":v["data_as_of"],
-		//     						  "link_id":v["link_id"]},
-		//     			"geometry":{"type":"LineString",
-		//     			"coordinates":pts}}
-		// 	    items["features"].push(json_this);
-		//   	});
-
-		// }).then(function(){
-		// 	console.log(items);
-		// 	map.addSource('roads', {
-		// 			type: 'geojson',
-		// 			data: items
-		// 		});
-		// 		map.addLayer({
-		// 			'id': 'trafficspeeds',
-		// 			'type': 'line',
-		// 			'source': 'roads',
-		// 			'layout': {
-		// 			'line-join': 'round',
-		// 			'line-cap': 'round'
-		// 			},
-		// 			'paint': {
-		// 			'line-color': '#888',
-		// 			'line-width': 8
-		// 			}
-		// 		});
-
-		// 	});
-	// }
-
-		// map.addSource('roads', {
-		// 	type: 'geojson',
-		// 	data: items
-		// });
-		// map.addLayer({
-		// 	'id': 'trafficspeeds',
-		// 	'type': 'line',
-		// 	'source': 'roads',
-		// 	'layout': {
-		// 	'line-join': 'round',
-		// 	'line-cap': 'round'
-		// 	},
-		// 	'paint': {
-		// 	'line-color': '#888',
-		// 	'line-width': 8
-		// 	}
-		// });
-	// })
-
-
 });
 </script>
  
