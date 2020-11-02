@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Real-Time DoT Traffic Speeds</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300&display=swap" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="day2/polyline.js"></script>
+
+<style>
+	body { margin: 0; padding: 0; }
+	#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+	.map-overlay {
+	font-family: 'Roboto Condensed', sans-serif;;
+	/*font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;*/
+	position: absolute;
+	width: 40%;
+	top: 0;
+	left: 0;
+	padding: 10px;
+	}
+	 
+	.map-overlay .map-overlay-inner {
+	background-color: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+	padding: 10px;
+	margin-bottom: 10px;
+	}
+	 
+	.map-overlay h2 {
+	line-height: 24px;
+	display: block;
+	margin: 0 0 10px;
+	}
+	.mapboxgl-popup {
+	max-width: 400px;
+	font: 12px/20px 'Montserrat Neue',sans-serif;
+	}
+	#slider{
+		width:90%;
+	}
+</style>
+</head>
+<body>
+<div id="map"></div>
+	<div class="map-overlay top">
+	<div class="map-overlay-inner">
+	<h2>Real-Time DoT Traffic Speeds</h2>
+	<p>Real-Time Average Traffic Speeds from DoT's Traffic Management Center<a href='https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9'>NYC's Open Data portal</a>. Width of the lines correspond to average estimated speed of the traffic. Unit of speeds is miles per hour.<br> <br>Warning! Takes a few seconds to load. <br> <br><a href="https://data.cityofnewyork.us/api/views/i4gi-tjb9/files/cc7f3b15-58b7-46e3-94e7-4c5753c3a8b8?download=true&filename=metadata_trafficspeeds.pdf">Data Dictionary</a> </p>
+	<!-- <h4></h4> -->
+	
+	</div>
+	
+	</div>
+</div>
+
+<script>
+	// TO MAKE THE MAP APPEAR YOU MUST
+	// ADD YOUR ACCESS TOKEN FROM
+	// https://account.mapbox.com
+	mapboxgl.accessToken = 'pk.eyJ1IjoiaWFtd2Z4IiwiYSI6ImNqNGFnMnIyMzEwZzgycXJ1ODdqbG14eGMifQ.3AqBqXZlcbsbEhxddAPB-g';
+var map = new mapboxgl.Map({
+	container: 'map',
+	style: 'mapbox://styles/iamwfx/ckh0zt1w80b0x19mpsnpm3rz9',
+	zoom: 12,
+	center: [-73.935242, 40.730610]
+	});
+
+var url = 'https://data.cityofnewyork.us/resource/i4gi-tjb9.json';
+var items = {"type": "FeatureCollection",
+				  "features":[]};
+
+map.on('load', function () {
+		$.ajax({
+		    url: "https://data.cityofnewyork.us/resource/i4gi-tjb9.json",
+		    type: "GET",
+		    data: {
+		      "$limit" : 1000,
+		      "$$app_token" : "IXTQ0ECSbSMwKkUKjbtN2LJkC"
+		    }
+		}).done(function(data) {
+			
+		  $.each( data, function( i,v ) {
+			  	
+			  	pts = polyline.decode(v["encoded_poly_line"]);
+			  	// Polyling function doesn't quite get all the coords correct
+			  	pts = pts.filter(coord => coord[0]< -72).filter(coord => coord[1]>40)
+
+			  	json_this = {"type":"Feature",
+		    			"properties":{"id":v["id"],
+		    						  "speed":parseInt(v["speed"]),
+		    						  "travel_time":parseInt(v["travel_time"]),
+		    						  "data_as_of":v["data_as_of"],
+		    						  "link_id":v["link_id"]},
+		    			"geometry":{"type":"LineString",
+		    			"coordinates":pts}}
+			    items["features"].push(json_this);
+		  	});
+		  console.log(items);
+		}).then(function(){
+			console.log(items);
+			map.addSource('roads', {
+					type: 'geojson',
+					data: items
+				});
+				map.addLayer({
+					'id': 'trafficspeeds',
+					'type': 'line',
+					'source': 'roads',
+					'layout': {
+					'line-join': 'round',
+					'line-cap': 'round'
+					},
+					'paint': {
+					'line-color': '#ffbe0b',
+					'line-width': {
+		               property: 'speed',
+		               stops: [
+		                   [0, 16],
+		                   [5, 14],
+		                   [10, 12],
+		                   [20, 10],
+		                   [30, 8],
+		                   [40, 6],
+		                   [50, 5],
+		                   [60, 4],
+		                   [70, 3],
+		                   [80, 2],
+		                   [90, 1],
+		                   [100, .5]
+		               ]
+					}}
+				});
+
+				map.addLayer({
+				    "id": "symbols",
+				    "type": "symbol",
+				    "source": "roads",
+				    "layout": {
+				      "symbol-placement": "line",
+				      "text-font": ["Roboto Condensed"],
+				      "text-field": '{speed}', // part 2 of this is how to do it
+				      "text-size": 14
+				    }
+				  });
+
+			});
+
+
+
+	// function updateTraffic(){
+		// $.getJSON( "https://data.cityofnewyork.us/resource/i4gi-tjb9.json", function( data ) {
+		//   // var items = {
+		// 		// 	  "type": "FeatureCollection",
+		// 		// 	  "features":[]};
+		//   	$.each( data, function( i,v ) {
+		// 	  	// console.log(v["encoded_poly_line"]);
+		// 	  	pts = polyline.decode(v["encoded_poly_line"]);
+		// 	  	json_this = {"type":"Feature",
+		//     			"properties":{"id":v["id"],
+		//     						  "speed":parseInt(v["speed"]),
+		//     						  "travel_time":parseInt(v["travel_time"]),
+		//     						  "data_as_of":v["data_as_of"],
+		//     						  "link_id":v["link_id"]},
+		//     			"geometry":{"type":"LineString",
+		//     			"coordinates":pts}}
+		// 	    items["features"].push(json_this);
+		//   	});
+
+		// }).then(function(){
+		// 	console.log(items);
+		// 	map.addSource('roads', {
+		// 			type: 'geojson',
+		// 			data: items
+		// 		});
+		// 		map.addLayer({
+		// 			'id': 'trafficspeeds',
+		// 			'type': 'line',
+		// 			'source': 'roads',
+		// 			'layout': {
+		// 			'line-join': 'round',
+		// 			'line-cap': 'round'
+		// 			},
+		// 			'paint': {
+		// 			'line-color': '#888',
+		// 			'line-width': 8
+		// 			}
+		// 		});
+
+		// 	});
+	// }
+
+		// map.addSource('roads', {
+		// 	type: 'geojson',
+		// 	data: items
+		// });
+		// map.addLayer({
+		// 	'id': 'trafficspeeds',
+		// 	'type': 'line',
+		// 	'source': 'roads',
+		// 	'layout': {
+		// 	'line-join': 'round',
+		// 	'line-cap': 'round'
+		// 	},
+		// 	'paint': {
+		// 	'line-color': '#888',
+		// 	'line-width': 8
+		// 	}
+		// });
+	// })
+
+
+});
+</script>
+ 
+</body>
+</html>
