@@ -50,9 +50,10 @@
 	<div class="map-overlay top">
 	<div class="map-overlay-inner">
 	<h2>Real-Time DoT Traffic Speeds</h2>
-	<p>Real-Time Average Traffic Speeds from DoT's Traffic Management Center<a href='https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9'>NYC's Open Data portal</a>. Width of the lines correspond to average estimated speed of the traffic. Unit of speeds is miles per hour.<br> <br>Warning! Takes a few seconds to load. <br> <br><a href="https://data.cityofnewyork.us/api/views/i4gi-tjb9/files/cc7f3b15-58b7-46e3-94e7-4c5753c3a8b8?download=true&filename=metadata_trafficspeeds.pdf">Data Dictionary</a> </p>
+	<p>Real-Time Average Traffic Speeds in the last hour from DoT's Traffic Management Center <a href='https://data.cityofnewyork.us/Transportation/DOT-Traffic-Speeds-NBE/i4gi-tjb9'>NYC's Open Data portal</a>, where the DoT has traffic sensors. Width of the lines correspond to average estimated speed of the traffic. Unit of speeds is miles per hour.<br> <br><a href="https://data.cityofnewyork.us/api/views/i4gi-tjb9/files/cc7f3b15-58b7-46e3-94e7-4c5753c3a8b8?download=true&filename=metadata_trafficspeeds.pdf">Data Dictionary</a> </p>
 	<!-- <h4></h4> -->
-	
+	<button id='updateFeed' type="button">Update Feed</button>
+
 	</div>
 	
 	</div>
@@ -66,20 +67,136 @@
 var map = new mapboxgl.Map({
 	container: 'map',
 	style: 'mapbox://styles/iamwfx/ckh0zt1w80b0x19mpsnpm3rz9',
-	zoom: 12,
-	center: [-73.935242, 40.730610]
+	zoom: 13,
+	center: [-73.968285, 40.785091]
 	});
 
-var url = 'https://data.cityofnewyork.us/resource/i4gi-tjb9.json';
+function pad2(number) {
+   return (number < 10 ? '0' : '') + number
+}
+var date = new Date(); 
+// var now_utc =  Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+//  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+var year = date.getUTCFullYear()
+var month = pad2(date.getUTCMonth())
+var day1= pad2(date.getUTCDate())
+// var day2= pad2(date.getUTCDate()-1)
+var hours1 = pad2(date.getUTCHours()-4)
+var hours2 = pad2(date.getUTCHours()-5)
+var minutes= pad2(date.getUTCMinutes())
+var seconds = pad2(date.getUTCSeconds())
+var dateFilterMax =`${year}-${month}-${day1}T${hours1}:${minutes}:${seconds}`
+var dateFilterMin =`${year}-${month}-${day1}T${hours2}:${minutes}:${seconds}`
+
+
 var items = {"type": "FeatureCollection",
 				  "features":[]};
 
 map.on('load', function () {
-		$.ajax({
-		    url: "https://data.cityofnewyork.us/resource/i4gi-tjb9.json",
+
+	$.ajax({
+		    url: `https://data.cityofnewyork.us/resource/i4gi-tjb9.json?$where=(data_as_of<= '${dateFilterMax}')AND (data_as_of>= '${dateFilterMin}')`,
 		    type: "GET",
 		    data: {
-		      "$limit" : 1000,
+		      "$limit" : 5000,
+		      "$$app_token" : "IXTQ0ECSbSMwKkUKjbtN2LJkC"
+		    }
+		}).done(function(data) {
+			
+		  $.each( data, function( i,v ) {
+			  	
+			  	pts = polyline.decode(v["encoded_poly_line"]);
+			  	// Polyling function doesn't quite get all the coords correct
+			  	pts = pts.filter(coord => coord[0]< -72).filter(coord => coord[1]>40)
+
+			  	json_this = {"type":"Feature",
+		    			"properties":{"id":v["id"],
+		    						  "speed":parseInt(v["speed"]),
+		    						  "color":'#bbb',
+		    						  "travel_time":parseInt(v["travel_time"]),
+		    						  "data_as_of":v["data_as_of"],
+		    						  "link_id":v["link_id"]},
+		    			"geometry":{"type":"LineString",
+		    			"coordinates":pts}}
+			    items["features"].push(json_this);
+		  	});
+		  console.log(items);
+		}).then(function(){
+			console.log(items);
+			map.addSource('roads', {
+					type: 'geojson',
+					data: items
+				});
+				map.addLayer({
+					'id': 'trafficspeeds',
+					'type': 'line',
+					'source': 'roads',
+					'layout': {
+					'line-join': 'round',
+					'line-cap': 'round'
+					},
+					'paint': {
+					'line-color': '#ffbe0b',
+					'line-width': {
+		               property: 'speed',
+		               stops: [
+		                   [0,12],
+		                   [1, 10],
+		                   [5, 8],
+		                   [10, 4],
+		                   [20, 3],
+		                   [30, 2],
+		                   [40, 1.5],
+		                   [50, 1],
+		                   [60, .5],
+		                   [70, .25],
+		                   [80, .15],
+		                   [90, .1],
+		                   [100, .05]
+		               ]
+					}}
+				});
+
+				map.addLayer({
+				    "id": "symbols",
+				    "type": "symbol",
+				    "source": "roads",
+				    "layout": {
+				      "symbol-placement": "line",
+				      "text-font": ["Roboto Condensed Bold"],
+				      "text-field": '{speed}', // part 2 of this is how to do it
+				      "text-size": 16
+				    },
+				    paint: {
+					    "text-color": "#ff006e"
+					  }
+				  });
+
+			});
+
+	$('#updateFeed').on("click", function(e) {
+		console.log("Updating Traffic Data");
+		map.removeLayer('trafficspeeds');
+		map.removeLayer('symbols');
+		map.removeSource('roads');
+		var date = new Date(); 
+		// var now_utc =  Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),
+		//  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+		var year = date.getUTCFullYear()
+		var month = pad2(date.getUTCMonth())
+		var day1= pad2(date.getUTCDate())
+		// var day2= pad2(date.getUTCDate()-1)
+		var hours1 = pad2(date.getUTCHours()-4)
+		var hours2 = pad2(date.getUTCHours()-5)
+		var minutes= pad2(date.getUTCMinutes())
+		var seconds = pad2(date.getUTCSeconds())
+		var dateFilterMax =`${year}-${month}-${day1}T${hours1}:${minutes}:${seconds}`
+		var dateFilterMin =`${year}-${month}-${day1}T${hours2}:${minutes}:${seconds}`
+		$.ajax({
+		    url: `https://data.cityofnewyork.us/resource/i4gi-tjb9.json?$where=(data_as_of<= '${dateFilterMax}')AND (data_as_of>= '${dateFilterMin}')`,
+		    type: "GET",
+		    data: {
+		      "$limit" : 5000,
 		      "$$app_token" : "IXTQ0ECSbSMwKkUKjbtN2LJkC"
 		    }
 		}).done(function(data) {
@@ -120,18 +237,19 @@ map.on('load', function () {
 					'line-width': {
 		               property: 'speed',
 		               stops: [
-		                   [0, 16],
-		                   [5, 14],
-		                   [10, 12],
-		                   [20, 10],
-		                   [30, 8],
-		                   [40, 6],
-		                   [50, 5],
-		                   [60, 4],
-		                   [70, 3],
-		                   [80, 2],
-		                   [90, 1],
-		                   [100, .5]
+		                   [0,12],
+		                   [1, 10],
+		                   [5, 8],
+		                   [10, 4],
+		                   [20, 3],
+		                   [30, 2],
+		                   [40, 1.5],
+		                   [50, 1],
+		                   [60, .5],
+		                   [70, .25],
+		                   [80, .15],
+		                   [90, .1],
+		                   [100, .05]
 		               ]
 					}}
 				});
@@ -144,12 +262,15 @@ map.on('load', function () {
 				      "symbol-placement": "line",
 				      "text-font": ["Roboto Condensed"],
 				      "text-field": '{speed}', // part 2 of this is how to do it
-				      "text-size": 14,
-				      "text-color": "#A9A9A9"
-				    }
+				      "text-size": 16
+				    },
+				     paint: {
+					    "text-color": "#ff006e"
+					  }
 				  });
 
 			});
+	})
 
 
 
