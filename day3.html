@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Election Districts and Voting Sites</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300&display=swap" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="day2/polyline.js"></script>
+
+<style>
+	body { margin: 0; padding: 0; }
+	#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+	.map-overlay {
+	font-family: 'Roboto Condensed', sans-serif;;
+	/*font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;*/
+	position: absolute;
+	width: 40%;
+	top: 0;
+	left: 0;
+	padding: 10px;
+	}
+	 
+	.map-overlay .map-overlay-inner {
+	background-color: #fff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+	padding: 10px;
+	margin-bottom: 10px;
+	}
+	 
+	.map-overlay h2 {
+	line-height: 24px;
+	display: block;
+	margin: 0 0 10px;
+	}
+	.mapboxgl-popup {
+	max-width: 400px;
+	font: 12px/20px 'Montserrat Neue',sans-serif;
+	}
+	#slider{
+		width:90%;
+	}
+</style>
+</head>
+<body>
+<div id="map"></div>
+	<div class="map-overlay top">
+	<div class="map-overlay-inner">
+	<h2>Election Districts and Voting Sites</h2>
+	<p><a href='https://data.cityofnewyork.us/City-Government/Election-District-Poll-Sites/i3a3-qxkf'>Districts data</a> from NYC's Open Data portal provided by the Board of Elections (BOENY). <a href='https://data.cityofnewyork.us/City-Government/Election-District-Poll-Sites/i3a3-qxkf'>Poll sites</a> also from the Open Data portal.</p>
+	
+	</div>
+	
+	</div>
+</div>
+
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiaWFtd2Z4IiwiYSI6ImNqNGFnMnIyMzEwZzgycXJ1ODdqbG14eGMifQ.3AqBqXZlcbsbEhxddAPB-g';
+var map = new mapboxgl.Map({
+	container: 'map',
+	style: 'mapbox://styles/iamwfx/ckh2cu8el078b19lv3fdiprzz',
+	zoom: 12,
+	center: [-73.968285, 40.785091]
+	});
+
+
+
+map.on('load', function () {
+
+	// Add district borders
+	map.addSource('election_districts', {
+	type: 'vector',
+	url: 'mapbox://iamwfx.8gp359kg'
+	});
+
+	map.addLayer({
+	'id': 'election_districts',
+	'type': 'line',
+	'source': 'election_districts',
+	'source-layer': 'ElectionDistricsNew-0mrpu4',
+	'paint': {
+	// make circles larger as the user zooms from z12 to z22
+	'line-width':{
+	'base': 2,
+	'stops': [
+	[1,1],
+	[14,4],
+	[30, 100]
+	]
+	},
+	'line-color': [
+	'match',
+	['get', 'ED'],
+	76, '#F67088',
+	 15, '#F67181',
+	 67, '#F6727A',
+	 16, '#F77272',
+	 12, '#F77369',
+	 14, '#F7745F',
+	 79, '#F77553',
+	 13, '#F77543',
+	 40, '#F67732',
+	 83, '#EF7C32',
+	 43, '#E98031',
+	 41, '#E38431',
+	 86, '#DE8731',
+	 84, '#D98931',
+	 103, '#D58C31',
+	 95, '#D18E31',
+	 2, '#CD9031',
+	 4, '#C99131',
+	 5, '#C59331',
+	 1, '#C29531',
+	 77, '#BE9631',
+	 72, '#BB9731',
+	 113, '#B89931',
+	 73, '#B49A31',
+	 20, '#B19B31',
+	 42, '#AE9C31',
+	 44, '#AA9D31',
+	 37, '#A79E31',
+	 46, '#A39F31',
+	 33, '#A0A131',
+	 6, '#9CA231',
+	 85, '#98A331',
+	 62, '#94A431',
+	 36, '#90A531',
+	 55, '#8CA631',
+	 115, '#87A731',
+	 8, '#82A831',
+	 7, '#7CA931',
+	 9, '#76AB31',
+	 3, '#6EAC31',
+	 75, '#66AD31',
+	 18, '#5CAF31',
+	 66, '#4FB031',
+	 104, '#3EB231',
+	 63, '#31B33B',
+	 32, '#31B24D',
+	 107, '#32B15A',
+	 51, '#32B163',
+	 52, '#32B16B',
+	 17, '#32B072',
+	 53, '#33B078',
+	 24, '#33AF7D',
+	 80, '#33AF81',
+	 49, '#33AF86',
+	 47, '#34AF89',
+	 48, '#34AE8D',
+	 22, '#34AE90',
+	 50, '#34AE93',
+	 88, '#34AD96',
+	 89, '#35AD99',
+	 112, '#35AD9C',
+	 82, '#35AD9E',
+	 57, '#35ACA1',
+	 56, '#35ACA4',
+	 119, '#35ACA6',
+	 38, '#35ACA8',
+	 39, '#36ABAB',
+	 74, '#36ABAD',
+	 23, '#36ABB0',
+	 68, '#36ABB2',
+	 26, '#36AAB5',
+	 65, '#37AAB7',
+	 81, '#37AABA',
+	 30, '#37A9BD',
+	 29, '#37A9C0',
+	 28, '#37A9C3',
+	 64, '#38A8C6',
+	 35, '#38A8C9',
+	 34, '#38A7CD',
+	 45, '#39A7D1',
+	 21, '#39A6D5',
+	 11, '#39A5DA',
+	 59, '#3AA5DF',
+	 60, '#3AA4E5',
+	 27, '#3BA3EC',
+	 70, '#3CA1F3',
+	 92, '#4F9FF4',
+	 105, '#5F9DF4',
+	 78, '#6C9BF4',
+	 54, '#7798F4',
+	 96, '#8096F4',
+	 31, '#8994F4',
+	 19, '#9192F4',
+	 61, '#998FF4',
+	 93, '#A08DF4',
+	 100, '#A78AF4',
+	 108, '#AD88F4',
+	 101, '#B485F4',
+	 102, '#BA82F4',
+	 114, '#C07FF4',
+	 69, '#C77CF4',
+	 58, '#CD78F4',
+	 71, '#D375F4',
+	 90, '#DA70F4',
+	 110, '#E06BF4',
+	 10, '#E766F4',
+	 25, '#EE60F4',
+	 87, '#F45BF2',
+	 111, '#F45DEB',
+	 106, '#F45FE4',
+	 94, '#F460DE',
+	 91, '#F562D9',
+	 99, '#F563D3',
+	 97, '#F564CE',
+	 117, '#F566C9',
+	 125, '#F567C4',
+	 118, '#F568BF',
+	 124, '#F569BA',
+	 109, '#F569B5',
+	 116, '#F66AB0',
+	 98, '#F66BAB',
+	 126, '#F66CA6',
+	 120, '#F66DA1',
+	 122, '#F66E9C',
+	 121, '#F66E96',
+	 123, '#F66F8E',
+	       /* other */ '#ccc'
+	]
+	}
+	});
+
+	map.addLayer({
+	'id': 'election_districts1',
+	'type': 'fill',
+	'source': 'election_districts',
+	'source-layer': 'ElectionDistricsNew-0mrpu4',
+	'paint': {
+	// make circles larger as the user zooms from z12 to z22
+	'fill-opacity':{
+	'base': .5,
+	'stops': [
+	[1,.75],
+	[14,.25],
+	[30, .1]
+	]
+	},
+	'fill-color': [
+	'match',
+	['get', 'ED'],
+	76, '#F67088',
+	 15, '#F67181',
+	 67, '#F6727A',
+	 16, '#F77272',
+	 12, '#F77369',
+	 14, '#F7745F',
+	 79, '#F77553',
+	 13, '#F77543',
+	 40, '#F67732',
+	 83, '#EF7C32',
+	 43, '#E98031',
+	 41, '#E38431',
+	 86, '#DE8731',
+	 84, '#D98931',
+	 103, '#D58C31',
+	 95, '#D18E31',
+	 2, '#CD9031',
+	 4, '#C99131',
+	 5, '#C59331',
+	 1, '#C29531',
+	 77, '#BE9631',
+	 72, '#BB9731',
+	 113, '#B89931',
+	 73, '#B49A31',
+	 20, '#B19B31',
+	 42, '#AE9C31',
+	 44, '#AA9D31',
+	 37, '#A79E31',
+	 46, '#A39F31',
+	 33, '#A0A131',
+	 6, '#9CA231',
+	 85, '#98A331',
+	 62, '#94A431',
+	 36, '#90A531',
+	 55, '#8CA631',
+	 115, '#87A731',
+	 8, '#82A831',
+	 7, '#7CA931',
+	 9, '#76AB31',
+	 3, '#6EAC31',
+	 75, '#66AD31',
+	 18, '#5CAF31',
+	 66, '#4FB031',
+	 104, '#3EB231',
+	 63, '#31B33B',
+	 32, '#31B24D',
+	 107, '#32B15A',
+	 51, '#32B163',
+	 52, '#32B16B',
+	 17, '#32B072',
+	 53, '#33B078',
+	 24, '#33AF7D',
+	 80, '#33AF81',
+	 49, '#33AF86',
+	 47, '#34AF89',
+	 48, '#34AE8D',
+	 22, '#34AE90',
+	 50, '#34AE93',
+	 88, '#34AD96',
+	 89, '#35AD99',
+	 112, '#35AD9C',
+	 82, '#35AD9E',
+	 57, '#35ACA1',
+	 56, '#35ACA4',
+	 119, '#35ACA6',
+	 38, '#35ACA8',
+	 39, '#36ABAB',
+	 74, '#36ABAD',
+	 23, '#36ABB0',
+	 68, '#36ABB2',
+	 26, '#36AAB5',
+	 65, '#37AAB7',
+	 81, '#37AABA',
+	 30, '#37A9BD',
+	 29, '#37A9C0',
+	 28, '#37A9C3',
+	 64, '#38A8C6',
+	 35, '#38A8C9',
+	 34, '#38A7CD',
+	 45, '#39A7D1',
+	 21, '#39A6D5',
+	 11, '#39A5DA',
+	 59, '#3AA5DF',
+	 60, '#3AA4E5',
+	 27, '#3BA3EC',
+	 70, '#3CA1F3',
+	 92, '#4F9FF4',
+	 105, '#5F9DF4',
+	 78, '#6C9BF4',
+	 54, '#7798F4',
+	 96, '#8096F4',
+	 31, '#8994F4',
+	 19, '#9192F4',
+	 61, '#998FF4',
+	 93, '#A08DF4',
+	 100, '#A78AF4',
+	 108, '#AD88F4',
+	 101, '#B485F4',
+	 102, '#BA82F4',
+	 114, '#C07FF4',
+	 69, '#C77CF4',
+	 58, '#CD78F4',
+	 71, '#D375F4',
+	 90, '#DA70F4',
+	 110, '#E06BF4',
+	 10, '#E766F4',
+	 25, '#EE60F4',
+	 87, '#F45BF2',
+	 111, '#F45DEB',
+	 106, '#F45FE4',
+	 94, '#F460DE',
+	 91, '#F562D9',
+	 99, '#F563D3',
+	 97, '#F564CE',
+	 117, '#F566C9',
+	 125, '#F567C4',
+	 118, '#F568BF',
+	 124, '#F569BA',
+	 109, '#F569B5',
+	 116, '#F66AB0',
+	 98, '#F66BAB',
+	 126, '#F66CA6',
+	 120, '#F66DA1',
+	 122, '#F66E9C',
+	 121, '#F66E96',
+	 123, '#F66F8E',
+	       /* other */ '#ccc'
+	]
+	}
+	});
+
+	map.addSource('election_districts1', {
+	type: 'vector',
+	url: 'mapbox://iamwfx.8gp359kg'
+	});
+	map.addLayer({
+	    "id": "ed_labels",
+	    "type": "symbol",
+	    "source": "election_districts1",
+	    'source-layer': 'ElectionDistricsNew-0mrpu4',
+	    "layout": {
+	      "symbol-placement": "point",
+	      "text-font": ["Roboto Condensed Bold"],
+	      "text-field": '{ED}', // part 2 of this is how to do it
+	      "text-size": {
+	'base': 11,
+	'stops': [
+	[1, 10],
+	[14, 16],
+	[30, 24]
+	]
+	},
+	    },
+	    paint: {
+		    "text-color": "#1d3557"
+		  }
+	  });
+
+   // Add sites
+	map.addSource('pollsites', {
+	type: 'vector',
+	url: 'mapbox://iamwfx.co0126xt',
+	});
+
+	map.addLayer({
+	'id': 'pollsites',
+	'type': 'circle',
+	'source': 'pollsites',
+	'source-layer': 'Voting_Poll_Sites_new-8msp64',
+	'paint': {
+	// make circles larger as the user zooms from z12 to z22
+	'circle-radius': {
+	'base': 3,
+	'stops': [
+	[1, 3],
+	[14, 6],
+	[30, 100]
+	]
+	},
+	// https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-match
+	'circle-color': [
+	'match',
+	['get', 'Entrance_Type'],
+	'Handicap', '#2b9348',
+	 'Voter', '#ffd500',
+	       /* other */ '#ccc'
+	]
+	}
+
+
+	});
+
+	// // When a click event occurs on a feature in the states layer, open a popup at the
+	// // location of the click, with description HTML from its properties.
+	// map.on('click', 'election_districts1', function (e) {
+	// new mapboxgl.Popup()
+	// .setLngLat(e.lngLat)
+	// .setHTML(e.features[0].elect_dist_new.name)
+	// .addTo(map);
+	// });
+	 
+	// // Change the cursor to a pointer when the mouse is over the states layer.
+	// map.on('mouseenter', 'election_districts1', function () {
+	// map.getCanvas().style.cursor = 'pointer';
+	// });
+	 
+	// // Change it back to a pointer when it leaves.
+	// map.on('mouseleave', 'pollsites', function () {
+	// map.getCanvas().style.cursor = '';
+	// });
+
+
+
+	// Create a popup, but don't add it to the map yet.
+	var popup = new mapboxgl.Popup({
+	closeButton: false,
+	closeOnClick: false
+	});
+
+	map.on('mouseenter', 'pollsites', function (e) {
+	// Change the cursor style as a UI indicator.
+	map.getCanvas().style.cursor = 'pointer';
+	 
+	var coordinates = e.features[0].geometry.coordinates.slice();
+
+	var SITE_NUMBER = e.features[0].properties.SITE_NUMBER;
+	var SITE_NAME = e.features[0].properties.SITE_NAME;
+	var Entrance_Type = e.features[0].properties.Entrance_Type;
+	var Entrance = e.features[0].properties.Entrance;
+	var BOROUGH = e.features[0].properties.BOROUGH;
+	var All_Election_Districts = e.features[0].properties.All_Election_Districts;
+	description = 
+				  '<strong>' + "Site Name: "+'</strong>'+SITE_NAME + '<br>' + 
+				  '<strong>' + "Site Number: "+'</strong>'+SITE_NUMBER + '<br>' + 
+				  '<strong>' + "Entrance Type: "+'</strong>'+Entrance_Type + '<br>' + 
+				  '<strong>' + "Entrance Address: "+'</strong>'+Entrance + '<br>' + 
+				  '<strong>' + "Borough:  "+'</strong>'+BOROUGH + '<br>'+
+				  '<strong>' + "All Election Districts:  "+'</strong>'+All_Election_Districts.toString() + '<br>'
+	// Ensure that if the map is zoomed out such that multiple
+	// copies of the feature are visible, the popup appears
+	// over the copy being pointed to.
+	while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+	coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+	}
+	 
+	// Populate the popup and set its coordinates
+	// based on the feature found.
+	popup.setLngLat(coordinates).setHTML(description).addTo(map);
+	});
+	 
+	map.on('mouseleave', 'pollsites', function () {
+	map.getCanvas().style.cursor = '';
+	popup.remove();
+	});
+
+});
+</script>
+</body>
+
+	<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-91894646-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</html>
